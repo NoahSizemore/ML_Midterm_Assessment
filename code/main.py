@@ -1,13 +1,7 @@
-from table_clean import clean_table, save_cleaned_table
-from pathlib import Path
-file_path = Path(__file__).parent / "train.xlsx"
-
-
-def main():
-    file_path = Path(__file__).parent / "train.xlsx"
-    output_path = Path(__file__).parent / "cleaned_output.xlsx"
-    cleaned_df = clean_table(file_path)
-    save_cleaned_table(cleaned_df, output_path)
+"""Runs the whole project: predictions.csv first, then the feature-importance analysis."""
+import feature_importance
+import linear_gd
 
 if __name__ == "__main__":
-    main()
+    linear_gd.main()
+    feature_importance.main()

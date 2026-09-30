@@ -1,0 +1,8 @@
+- Feature set: D: C + Sleep Hours Sq
+- Columns: Hours Studied, Previous Scores, Extracurricular Activities, Sleep Hours, Sample Question Papers Practiced, Sleep Hours Sq
+- Learning rate: 0.5, tol: 1e-12, max_iter: 20000
+- Iterations (validation fit / final refit): 28 / 28
+- Validation MSE: 4.2786, RMSE: 2.0685
+- Max |GD - closed form|: 4.09e-07
+- Split: 6621 train / 1655 val, seed 42
+- Rows: {'rows_raw': 8999, 'rows_dropped': 723, 'rows_kept': 8276, 'cells_missing_after_masking': 1095}

@@ -1,16 +1,14 @@
-# Midterm Project: Predicting Student Performance
+# Predicting Student Performance for AISD
 
-## Author Comments:
+Noah Sizemore — TAMUSA Machine Learning, Midterm Project
 
-* This is a repository housing my midterm assessment for the TAMUSA Machine Learning class.
-* This is model created by me, Noah Sizemore.
-* The following information is the functioning portion. The non-functional, or prior, version used for the testing is included.
+This is a repository housing my midterm assessment for the TAMUSA Machine Learning class.
 
 ## Overview
 
-Assume you are working as a data scientist for the AlamoGreat Independent School District (AISD). AISD is adopting a data-driven approach to improving student performance and has two goals. First, it wants a model that predicts each student's performance, so that staff can reach out early to students who may need help. Second, it wants to know which factors are most closely associated with a student's overall performance.
+Assume I am working as a data scientist for the AlamoGreat Independent School District (AISD). AISD is adopting a data-driven approach to improving student performance and has two goals. First, it wants a model that predicts each student's performance, so that staff can reach out early to students who may need help. Second, it wants to know which factors are most closely associated with a student's overall performance.
 
-In this project, you will predict each student's Performance Index from study habits and prior scores, then identify the three most important features. The project has three parts, covering data preparation, a from-scratch implementation of linear regression with gradient descent, and a computational analysis of feature importance.
+In this project, I  will predict each student's Performance Index from study habits and prior scores, then identify the three most important features. The project has three parts, covering data preparation, a from-scratch implementation of linear regression with gradient descent, and a computational analysis of feature importance.
 
 By the end of this project, you will be able to do the following.
 
@@ -19,219 +17,200 @@ By the end of this project, you will be able to do the following.
 - Predict students' Performance Index on a held-out test set.
 - Measure feature importance computationally and support a claim with more than one kind of evidence.
 
-## Part 1: The Data
+## 1. Introduction
 
-You are given two files. `train.csv` contains the features and the target. `test_features.csv` contains the features and an ID column, but no target. Develop and select your model using `train.csv` only. Then apply your final model to `test_features.csv` and submit the predicted Performance Index for every student (see Part 2 for the file format).
+AISD wants (1) a model that predicts each student's Performance Index early enough to target help, and (2) to know which factors are most closely associated with performance.
+I built a multi-feature linear regression trained by gradient descent (NumPy only) on the student data.
 
-| Column | Description |
-|---|---|
-| Hours Studied | Hours spent studying |
-| Weekly Study Hours | Self-reported total study hours per week |
-| Previous Scores | Score on previous exams (0 to 100) |
-| Extracurricular Activities | 1 = participates, 0 = does not |
-| Sleep Hours | Average hours of sleep per night |
-| Sample Question Papers Practiced | Number of practice papers completed |
-| Commute Minutes | Typical one-way commute to school |
-| Performance Index | Target. Overall performance score (0 to 100). Not included in the test file. |
+- Final validation MSE / RMSE: **4.28 / 2.07** (Table 4)
+- Top three features: **Previous Scores, Hours Studied, Sleep Hours** (Table 6)
 
-**Data cleaning.** Like most real-world data, `train.csv` contains missing values and data-entry errors. Missing values must be handled before training because they will break gradient descent. Two common approaches are (1) removing incomplete rows, which shrinks the training set, and (2) imputing missing values, for example with the column mean or median. Data-entry errors are values that are impossible or implausible for the column; inspect the data to find them and decide how to handle them.
+The cleaning consists of actaully cleaning the table's missing values through median values as well as dropping rows with missing or errors values. This allowed for the best results when evaluating the table. The feature-importance was determined by multiple ranking methods, each handling different aspects.
 
-**Normalization or standardization.** The features are on very different scales. Used as-is, large-valued features dominate the gradient, which makes gradient descent slow or unstable. Normalization (rescaling to a fixed range) and standardization (rescaling to zero mean and unit variance) put the features on a common scale. Compute any scaling statistics from the training data only, and apply the same statistics to the validation and test data. Though normalization or standardization is not required, it is recommended to do one to improve model learning.
+## 2. Data Handling
 
-Document every data-handling decision in Section 2 of your report (see Report Requirements).
+### 2.1 Exploration
 
-## Part 2: Linear Regression and Gradient Descent from Scratch
+**Table 1.** Summary statistics of `train` (8,999 rows). Source: `code/results/summary_stats.md`.
 
-Extend the class demos from one or two features to all features in this dataset. Use NumPy only, and minimize the same cost function used in the class demos.
+| Column | Min | Max | Mean | Missing | Entry errors |
+|---|---|---|---|---|---|
+| Hours Studied | 1 | 90 | 5.00 | 0 | 5 |
+| Weekly Study Hours | 0 | 88 | 34.92 | 360 | 0 |
+| Previous Scores | 40 | 188 | 69.44 | 0 | 5 |
+| Extracurricular Activities | 0 | 1 | 0.50 | 0 | 0 |
+| Sleep Hours | -9 | 9 | 6.52 | 360 | 5 |
+| Sample Question Papers Practiced | 0 | 9 | 4.56 | 360 | 0 |
+| Commute Minutes | 5 | 120 | 29.95 | 0 | 0 |
+| Performance Index | 7 | 100 | 54.97 | 0 | 0 |
 
-### Tasks
+The following already have errors: 
+* Hours Studied: a max of 90 against a mean of 5.0 is not possible as a daily figure, and the range 1–9 holds for almost every row.
+* Previous Scores: 188 is above the 0–100 scale.
+* Sleep Hours: −9 is a negative duration.
 
-- Implement a class `LinearRegressionGD` with `fit(X, y)` and `predict(X)`. The constructor takes a learning rate, a maximum number of iterations, and a convergence tolerance. The class records the cost at every iteration.
-- Create a validation set. Because the test labels are withheld, split `train.csv` into training and validation sets and use the validation set for all model selection.
-- Fully train the model on the training set, and select the best model based on the validation set. You may tune the learning rate, engineer new features, remove features, and so on.
-- Predict the test set with your final `LinearRegressionGD` model. Predictions from any other model (for example, scikit-learn) receive no performance credit.
-- Submit `predictions.csv` with your final model's prediction for every student in `test_features.csv`.
-  - The file needs to contain exactly two columns, with the header `ID,Performance Index`
-  - One row per row of `test_features.csv`, with the same IDs in the same order
-  - Numeric predictions (decimals are fine), no missing values, no index column
+### 2.2 Missing values
 
-The first few lines should look like this (note: the performance index values are for illustration purposes, not the real value you will get).
+- Method: Most rows with missing are uncomputable values have been removed, with remaining rows that can be assumed use the median value.
+- Affected: 360 cells each in Weekly Study Hours, Sleep Hours and Sample Question Papers Practiced (1,080 cells), plus 15 entry-error cells turned into NaN: 1,095 missing cells in total.
+- Result: 723 rows removed, **8,276 kept** (of 8,999).
+- Why: Imputing values gave a decent RMSE of 2.31l however, removing rows improve the score even further to 2.04. Medians are robust outliers, meaning removing them improves the RMSE score.
 
-ID,Performance Index
-1,43.2
-2,27.8
-3,68.5
+### 2.3 Data-entry errors
 
+- Detection: rule per column (`ENTRY_RULES` in `linear_gd.py`) — impossible ranges (score outside 0–100, sleep < 0 or > 24, hours > 168/week) and a histogram check for Hours Studied (8,994 of 8,999 values in 1–9).
+- **Table 2.** Errors found per column
 
-There are many ways to create the .csv file. Below is one example of how to write the file with pandas.
+| Column | Rule | Count | Values |
+|---|---|---|---|
+| Hours Studied | outside 0–9 | 5 | 10, 20, 60, 70, 90 |
+| Previous Scores | outside 0–100 | 5 | 154 … 188 |
+| Sleep Hours | < 0 or > 24 | 5 | -9, -7, -6, -4, -4 |
+| all other columns | see code | 0 | |
 
-```python
-submission = pd.DataFrame({"ID": test["ID"], "Performance Index": predictions})
-submission.to_csv("predictions.csv", index=False)
-```
+- Handling: replaced with NaN, then the rows are dropped with the missing-value step (Section 2.2).
+- Why: The values are unknown, so dropping these rows does not affect the table as a whole. Imputing the values where able gives more training data. 
 
-## Part 3: The Three Most Important Features
+![histogram](code/figures/histogram.png)
 
-Identify the three most important features for predicting Performance Index, in ranked order. Your ranking must come from computed results, not from intuition or assumptions about what should matter. You may use scikit-learn in this part (for example, for tree-based importance); Part 2 remains NumPy only.
+### 2.4 Scaling
 
-The table below lists methods you can use. This is not an exhaustive list. Feel free to use methods that are not mentioned in the list.
+- Method: standardization, z = (x − mean) / std, applied to every model input column.
+- Why: The feature range is quite leage, some itesm 0-9 and other up to 100, so standardizing the results allows for one learning rate to apply for all features. 
+- Statement: the mean and std were computed **from the training data only** and reused for the validation and test data (`Preprocessor.fit` / `.transform`).
 
-| Method | How it works | What it tells you |
+### 2.5 Pipeline
+
+1. Replace entry errors with NaN.
+2. Training only: drop rows missing the target or a core feature.
+3. Split into training and validation (Section 3.2).
+4. Fit on the training split: medians, the Sleep Hours centre, and the standardization mean/std.
+5. Impute any remaining NaN with the training medians.
+6. Add `Sleep Hours Sq = (Sleep Hours − training mean)²`.
+7. Standardize.
+
+The same fitted `Preprocessor` transforms `test_features`. For the final model it is refit on all cleaned training rows, then applied to the test features.
+
+## 3. Model Development
+
+### 3.1 Implementation
+
+Model: ŷᵢ = wᵀxᵢ + b, with m training rows and n features.
+
+Cost: J(w, b) = 1/(2m) · Σᵢ (ŷᵢ − yᵢ)²
+
+Gradients: ∂J/∂w = (1/m) · Xᵀ(ŷ − y), ∂J/∂b = (1/m) · Σᵢ (ŷᵢ − yᵢ)
+
+Update: w ← w − α · ∂J/∂w, b ← b − α · ∂J/∂b
+
+Stopping rule: stop when |J(t−1) − J(t)| < tol (tol = 1e-12) or after max_iter = 20,000 iterations. The cost is recorded at every iteration.
+
+Check: the fitted parameters differ from the closed-form least-squares solution (`numpy.linalg.lstsq`) by at most **4.1e-7**.
+
+### 3.2 Validation design
+
+80 % / 20 % random split of the cleaned training rows: 6,621 training and 1,655 validation rows, seed **42**.
+
+### 3.3 Training behavior
+
+![cost_curves](code/figures/cost_curves.png)
+
+**Table 3.** Learning-rate comparison (feature set D)
+
+| Learning rate | Iterations to convergence | Val RMSE |
 |---|---|---|
-| Permutation importance | Shuffle one feature's values in the validation set and measure how much validation RMSE increases. Repeat for each feature. | How much the trained model relies on that feature |
-| Drop-one-feature retraining | Retrain the model without one feature and compare validation RMSE with the full model. Repeat for each feature. | How much predictive information is lost without that feature |
-| Single-feature models | Train a model on one feature at a time and compare validation RMSE. | How much each feature can predict on its own |
-| Standardized coefficients | Fit a linear model on standardized features and compare the absolute coefficient sizes. | Each feature's linear effect per standard deviation |
-| Tree-based importance | Read `feature_importances_` from a random forest or gradient-boosted model. | How much each feature reduces error in the trees' splits |
+| 0.001 | 14,459 | 2.0685 |
+| 0.01 | 1,557 | 2.0685 |
+| 0.1 | 162 | 2.0685 |
+| 0.5 | 28 | 2.0685 |
 
-### Requirements
+Chosen: **0.5** (fastest to converge, same final error). The trade-off is simple: the smaller the rate, the slower the training is, while the larger it is, the faster and more likely it is to diverge. 
 
-1. Use at least two different methods from the table, or others you can justify, such as SHAP values.
-2. Report the numbers. Include a table with each feature's score under each method, and base your ranking on those scores.
-3. Compare the methods. State whether they produce the same ranking. Where they disagree, explain why.
-4. Check stability. Repeat the analysis with at least three different random train/validation splits and report whether the ranking holds.
-5. Examine the relationships. Plot each top feature against the target. Check whether any features are strongly correlated with each other, and explain how that correlation affects each method.
-6. Distinguish prediction from causation. In one paragraph, state whether your results show that changing a feature would change a student's score, and what this data can and cannot support.
+### 3.4 Model selection
 
-## Report Requirements
+**Table 4.** Experiments (learning rate 0.1; validation split above)
 
-The report may be up to 8 pages, excluding references. Use the section headings below, in this order, so that each graded item is easy to locate. Label every figure and table and refer to it in the text. Each bullet is a graded item; missing items receive no credit.
+| Experiment | Features | Val MSE | Val RMSE |
+|---|---|---|---|
+| A: Previous Scores only | 1 | 65.56 | 8.10 |
+| B: A + Hours Studied | 2 | 11.36 | 3.37 |
+| C: 5 core features | 5 | 8.38 | 2.89 |
+| **D: C + Sleep Hours Sq** | 6 | **4.28** | **2.07** |
+| E: D + Weekly Study Hours | 7 | 4.28 | 2.07 |
+| F: D + Commute Minutes | 7 | 4.29 | 2.07 |
+| G: all 7 + Sleep Hours Sq | 8 | 4.29 | 2.07 |
 
-### 1. Introduction (about half a page)
-- The prediction task and AISD's two goals
-- Your final validation MSE and your top three features
+Engineered feature: Sleep Hours Sq. The mean Performance Index rises from around 50 ar four hours of sleep to around 57 with seven to eight hours of sleep, then falls at nine hours. This means a straight line fits poorly to this. Adding the squared term, it was able to reduce RMSE from 2.89 to 2.07. Adding Weekly Study Hours and Commute Minutes did not affect the scores in any way (Weekly Study Hours duplicates Hours Studied, r = 0.92).
 
-### 2. Data Handling
-- **2.1 Exploration.** A table of summary statistics (minimum, maximum, mean) and the number of missing values in each column.
-- **2.2 Missing values.** The method used, the number of affected rows or cells, and why you chose it.
-- **2.3 Data-entry errors.** How you detected them (the rule or plot used), how many you found in each column, how you handled them, and why.
-- **2.4 Scaling.** The method used, why you chose it, and a statement that its statistics came only from the training data. If you decided NOT to scale the data, explain why.
-- **2.5 Pipeline.** The order of preprocessing steps and how the same steps were applied to `test_features.csv`.
+### 3.5 Final model
 
-### 3. Model Development
-- **3.1 Implementation.** The cost function, the gradient update rule for all parameters, and the stopping rule, written as equations.
-- **3.2 Validation design.** The split ratio and random seed.
-- **3.3 Training behavior.** Cost-versus-iteration curves for at least two learning rates, the learning rate you chose, and the number of iterations to convergence.
-- **3.4 Model selection.** A table of experiments listing the feature set, the learning rate, and the validation MSE for each. Explain any engineered features and why you tried them.
-- **3.5 Final model.** The final settings, whether you retrained on the full training file, and the final validation RMSE.
+- Features: Hours Studied, Previous Scores, Extracurricular Activities, Sleep Hours, Sample Question Papers Practiced, Sleep Hours Sq.
+- Learning rate 0.5, tol 1e-12, max_iter 20,000; converged in 28 iterations.
+- Retrained on the full cleaned training file (8,276 rows, preprocessing refit) before predicting the test set.
+- **Final validation RMSE: 2.07** (from the train-only model).
 
-### 4. Feature Importance
-- **4.1 Methods.** A brief description of each method used (at least two).
-- **4.2 Results.** A table showing each feature's score under each method, plus your ranked top three.
-- **4.3 Comparison.** Where the methods agree and disagree, and why.
-- **4.4 Stability.** Rankings from at least three random splits, and whether they hold.
-- **4.5 Relationships.** Plots of each top feature against the target, a correlation matrix (table or heatmap) of the features, and how correlated features affect each method.
-- **4.6 Prediction vs. causation.** One paragraph, as described in Part 3.
+## 4. Feature Importance
 
-### 5. Conclusion (a few sentences)
-- What AISD should take from your results, and one limitation of your analysis
+### 4.1 Methods
 
-### References
-Any tutorial, paper, or code you adapted, and a brief statement of how you used AI assistants, if at all
+1. Permutation importance — shuffle one feature in the validation set (20 repeats) and measure the RMSE increase.
+2. Drop-one retraining — retrain without the feature and measure the validation RMSE increase.
+3. Single-feature models — train on one feature alone; score = RMSE below the predict-the-mean baseline.
+4. Standardized coefficients — |w| on standardized features.
+5. Random-forest importance — `feature_importances_` (scikit-learn, 200 trees).
 
-## Deliverables
+Note: Sleep Hours and its squared term are treated as one feature in methods 1–4. The analysis uses all seven raw features.
 
-Submit three files by the deadline.
+### 4.2 Results
 
-| File | Contents |
-|---|---|
-| `report.pdf` | A report that follows the Report Requirements |
-| `linear_gd.py` | Your `LinearRegressionGD` class and the code that produces `predictions.csv` |
-| `predictions.csv` | Columns `ID` and `Performance Index`; one row per test ID |
+**Table 5.** Importance scores by method (seed 42). Source: `code/results/importance_scores.md`.
 
-## Rules
+| Feature | Permutation | Drop-one | Single-feature | Std. coef. | Random forest | Mean rank |
+|---|---|---|---|---|---|---|
+| Previous Scores | 22.83 | 15.55 | 10.94 | 17.68 | 0.840 | 1.0 |
+| Hours Studied | 8.61 | 1.85 | 1.23 | 7.40 | 0.141 | 2.0 |
+| Sleep Hours | 2.09 | 1.22 | 0.16 | 3.41 | 0.014 | 3.2 |
+| Sample Question Papers Practiced | 0.15 | 0.08 | -0.01 | 0.55 | 0.002 | 4.8 |
+| Weekly Study Hours | 0.00 | 0.00 | 0.95 | 0.02 | 0.002 | 5.2 |
+| Extracurricular Activities | 0.05 | 0.03 | 0.01 | 0.31 | 0.000 | 5.4 |
+| Commute Minutes | -0.00 | -0.00 | -0.00 | 0.06 | 0.001 | 6.4 |
 
-- **AI assistants.** You may use AI assistants to explain concepts and debug errors. You may be asked to explain any line of your code in a short check-in.
-- **Sources.** Cite any tutorial, paper, or code you adapted.
-- **Test set.** Use the test set only to produce your final predictions. Any tuning against it counts as a violation.
+**Table 6.** Ranked top three (mean rank across the five methods): **1. Previous Scores, 2. Hours Studied, 3. Sleep Hours**.
 
-## Grading (100 points)
+### 4.3 Comparison
 
-| Component | Where graded | Points |
-|---|---|---|
-| Report | `report.pdf`, Sections 1, 3, 5, and References | 20 |
-| Data handling | `report.pdf`, Section 2 | 20 |
-| Feature importance | `report.pdf`, Section 4 | 20 |
-| Method correctness | `linear_gd.py` | 20 |
-| Test performance | `predictions.csv` | 20 |
+Four of five methods give the same top three. The exception is the single-feature method, which puts Weekly Study Hours third.
+Weekly Study Hours correlates to Hours Studied, producing the same values of 0.92, so it by itself would produce the same prediction. Once Hours Studied is intorduced into the model, it holds almost no value. Sleep Hours scores low as a single feature because its effect is small on its own; it matters in combination with the others.
 
-Unless noted otherwise, each criterion receives full credit when it is present, complete, and correct; partial credit when it is present but incomplete, unjustified, or partly incorrect; and no credit when it is missing.
+### 4.4 Stability
 
-### Report (20 points)
+**Table 7.** Top three for five random splits (seeds 1–5). Source: `code/results/importance_stability.md`.
 
-| Criterion | Points |
-|---|---|
-| 1. Introduction states the task, the final validation RMSE, and the top three features | 2 |
-| 3.1 Cost function, gradient update, and stopping rule written correctly as equations | 4 |
-| 3.2 Validation split ratio and seed stated | 2 |
-| 3.3 Cost curves for at least two learning rates, with the chosen rate and convergence discussed | 4 |
-| 3.4 and 3.5 Experiment table with validation RMSE, and final model settings | 4 |
-| 5. Conclusion with a takeaway for AISD and one limitation | 1 |
-| Format: required headings, labeled figures and tables, 6-page limit, references and AI-use statement | 3 |
+Previous Scores > Hours Studied > Sleep Hours for the permutation, drop-one, std.-coefficient, random-forest and mean-rank methods in **all five splits**. The single-feature method gave Weekly Study Hours as third in all five. From this, it is proven that the rankings are stable, as they are the same across all five splits.
 
-### Data handling (20 points)
+### 4.5 Relationships
 
-| Criterion | Points |
-|---|---|
-| 2.1 Summary statistics and missing-value counts for every column | 3 |
-| 2.2 Missing-value method, number affected, and justification | 5 |
-| 2.3 Data-entry errors: detection rule, count per column, handling, and justification | 6 |
-| 2.4 Scaling method, justification, and training-only statistics | 4 |
-| 2.5 Preprocessing order and consistent application to the test features | 2 |
+![feature_v_target](code/figures/top_features_vs_target.png)
 
-### Feature importance (20 points)
+![correlation_matrix](code/figures/correlation_matrix.png)
 
-| Criterion | Points |
-|---|---|
-| 4.1 At least two methods described | 3 |
-| 4.2 Score table covering every feature under every method, with a ranking based on the scores | 4 |
-| 4.3 Agreement and disagreement between methods explained | 3 |
-| 4.4 Rankings from at least three splits, with a stability conclusion | 3 |
-| 4.5 Top features plotted against the target; correlation matrix; effect of correlation on each method explained | 4 |
-| 4.6 Prediction vs. causation paragraph | 3 |
 
-### Method correctness (20 points)
+- Figure 3: Previous Scores is strongly linear (r = 0.91); Hours Studied rises steadily (r = 0.37); Sleep Hours is curved, flat between 6 and 8 hours.
+- Correlated features: only Hours Studied and Weekly Study Hours are strongly correlated (r = 0.92). Permutation and drop-one understate each of the pair (the other covers for it), single-feature models credit both, coefficients split the weight between them, random forests share importance between them.
 
-| Criterion | Points |
-|---|---|
-| `LinearRegressionGD` constructor takes a learning rate, maximum iterations, and tolerance, and provides `fit` and `predict` | 3 |
-| Gradient of the class cost function is correct for all parameters; on the same features, the fitted parameters match the closed-form least-squares solution to within a small tolerance | 6 |
-| Stops when the change in cost falls below the tolerance or at the maximum iterations, and records the cost at every iteration | 3 |
-| Preprocessing is leak-free: scaling and imputation statistics come from training data and are reused for the test features | 3 |
-| Script runs end to end and reproduces `predictions.csv` from `LinearRegressionGD` (random seeds set) | 3 |
-| Code is readable and commented, and adapted sources are cited | 2 |
+### 4.6 Prediction vs. causation
 
-If you can't explain your code in a check-in, this may reduce your score.
+The results show that these features help predict Performance Index, not that changing them would change a student's score. The data is observational, meaning there may be cofounders. One example could be how motivation would affect both the study hours as well as the scores. Another options could bne previous scores being a proxy for ability, as they may affect motivation or intuition. What the data can actual support could be the following: flagging students who are at risk or are struggling. The data shows directly that more sleep and study would impriove a students scores.
 
-### Test performance (20 points)
+## 5. Conclusion
 
-Scored on the RMSE of `predictions.csv` against the true test labels. The target RMSE is 2.05. Each additional 0.15 RMSE, or any part of it, costs 1 point.
+To conclude the study, the single most important aspect of the sata is the prior scores mixed with the study hours and sleep. These together give actual correlation meaning to the data. Others, such as extracurriculars and commute, add little to the scores, holding less meaning. The biggest limitations of the model is its use of oberservational data, removing outliers and NaN values, and using a linear model instead of non-linear.
 
-**Points = 20 − ⌈(RMSE − 2.05) / 0.15⌉**, with a minimum of 0 and a maximum of 20.
+## References
 
-| Test RMSE | Points |
-|---|---|
-| 2.05 or lower | 20 |
-| Above 2.05, up to 2.20 | 19 |
-| Above 2.20, up to 2.35 | 18 |
-| Above 2.35, up to 2.50 | 17 |
-| Above 2.50, up to 2.65 | 16 |
-| Above 2.65, up to 2.80 | 15 |
-| Above 2.80, up to 2.95 | 14 |
-| Above 2.95, up to 3.10 | 13 |
-| Above 3.10, up to 3.25 | 12 |
-| Above 3.25, up to 3.40 | 11 |
-| Above 3.40, up to 3.55 | 10 |
-| Above 3.55, up to 3.70 | 9 |
-| Above 3.70, up to 3.85 | 8 |
-| Above 3.85, up to 4.00 | 7 |
-| Above 4.00, up to 4.15 | 6 |
-| Above 4.15, up to 4.30 | 5 |
-| Above 4.30, up to 4.45 | 4 |
-| Above 4.45, up to 4.60 | 3 |
-| Above 4.60, up to 4.75 | 2 |
-| Above 4.75, up to 4.90 | 1 |
-| Above 4.90 | 0 |
-
-A `predictions.csv` that does not meet the format requirements in Part 2, or that was not produced by your `LinearRegressionGD` model, receives 0 points for this component.
-
+- Liang, Tony (2026). mid-term_exam.pdf [PDF file]. BlackBoard. Texas A&M Univeristy - San Antonio
+- Harris, C. R., Millman, K. J., van der Walt, S. J., et al. (2020). Array Programming with NumPy. Nature 585, 357 (2020). https://doi.org/10.1038/s41586-020-2649-2
+Cited by: 37133
+McKinney, W. (2010). Data Structures for Statistical Computing in Python. Proceedings of the Python in Science Conference, 56-61. https://doi.org/10.25080/majora-92bf1922-00a
+Cited by: 18192
+- Anthropic. (2026, September 30). Clean and explain code with Python [explain concepts, debug errors, suggest the Sleep Hours squared feature, and create skeleton for report]. Claude Code (Sonnet 5.5 Medium)

@@ -1,0 +1,8 @@
+feature,Permutation rank,Drop-one rank,Single-feature rank,Std. coefficient rank,Random forest rank,Mean rank
+Previous Scores,1.0,1.0,1.0,1.0,1.0,1.0
+Hours Studied,2.0,2.0,2.0,2.0,2.0,2.0
+Sleep Hours,3.0,3.0,4.0,3.0,3.0,3.2
+Sample Question Papers Practiced,4.0,4.0,7.0,4.0,5.0,4.8
+Weekly Study Hours,6.0,6.0,3.0,7.0,4.0,5.2
+Extracurricular Activities,5.0,5.0,5.0,5.0,7.0,5.4
+Commute Minutes,7.0,7.0,6.0,6.0,6.0,6.4

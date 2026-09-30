@@ -1,6 +1,8 @@
+# imports
 import pandas as pd
 import numpy as np
 
+# Function to clean the table by handling impossible values and missing data
 def clean_table(file_path):
     # Load the Excel file into a DataFrame
     df = pd.read_excel(file_path)
@@ -36,6 +38,8 @@ def clean_table(file_path):
 
     return df
 
+# Function to save the cleaned table to an Excel file
 def save_cleaned_table(df, output_path):
     df.to_excel(output_path, index=False)
     print(f"Cleaned table saved to {output_path}")
+    print("="*40)
