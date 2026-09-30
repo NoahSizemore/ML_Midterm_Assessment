@@ -4,7 +4,7 @@
 
 * This is a repository housing my midterm assessment for the TAMUSA Machine Learning class.
 * This is model created by me, Noah Sizemore.
-* The following information is the functioning portion. The non-functional, or prior, version used for the testing is included in the "legacy" folder.
+* The following information is the functioning portion. The non-functional, or prior, version used for the testing is included.
 
 ## Overview
 
