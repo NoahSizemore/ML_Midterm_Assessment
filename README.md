@@ -8,7 +8,7 @@ This is a repository housing my midterm assessment for the TAMUSA Machine Learni
 
 Assume I am working as a data scientist for the AlamoGreat Independent School District (AISD). AISD is adopting a data-driven approach to improving student performance and has two goals. First, it wants a model that predicts each student's performance, so that staff can reach out early to students who may need help. Second, it wants to know which factors are most closely associated with a student's overall performance.
 
-In this project, I  will predict each student's Performance Index from study habits and prior scores, then identify the three most important features. The project has three parts, covering data preparation, a from-scratch implementation of linear regression with gradient descent, and a computational analysis of feature importance.
+In this project, I will predict each student's Performance Index from study habits and prior scores, then identify the three most important features. The project has three parts, covering data preparation, a from-scratch implementation of linear regression with gradient descent, and a computational analysis of feature importance.
 
 By the end of this project, you will be able to do the following.
 
@@ -25,7 +25,7 @@ I built a multi-feature linear regression trained by gradient descent (NumPy onl
 - Final validation MSE / RMSE: **4.28 / 2.07** (Table 4)
 - Top three features: **Previous Scores, Hours Studied, Sleep Hours** (Table 6)
 
-The cleaning consists of actaully cleaning the table's missing values through median values as well as dropping rows with missing or errors values. This allowed for the best results when evaluating the table. The feature-importance was determined by multiple ranking methods, each handling different aspects.
+The cleaning consists of filling the table's missing values with median values as well as dropping rows with missing or erroneous values. This allowed for the best results when evaluating the table. The feature-importance was determined by multiple ranking methods, each handling different aspects.
 
 ## 2. Data Handling
 
@@ -44,17 +44,17 @@ The cleaning consists of actaully cleaning the table's missing values through me
 | Commute Minutes | 5 | 120 | 29.95 | 0 | 0 |
 | Performance Index | 7 | 100 | 54.97 | 0 | 0 |
 
-The following already have errors: 
+The following columns already show errors:
 * Hours Studied: a max of 90 against a mean of 5.0 is not possible as a daily figure, and the range 1–9 holds for almost every row.
 * Previous Scores: 188 is above the 0–100 scale.
 * Sleep Hours: −9 is a negative duration.
 
 ### 2.2 Missing values
 
-- Method: Most rows with missing are uncomputable values have been removed, with remaining rows that can be assumed use the median value.
+- Method: Rows with missing values in a core feature or the target are removed; any remaining missing values (Weekly Study Hours, Commute Minutes) are imputed with the training median.
 - Affected: 360 cells each in Weekly Study Hours, Sleep Hours and Sample Question Papers Practiced (1,080 cells), plus 15 entry-error cells turned into NaN: 1,095 missing cells in total.
 - Result: 723 rows removed, **8,276 kept** (of 8,999).
-- Why: Imputing values gave a decent RMSE of 2.31l however, removing rows improve the score even further to 2.04. Medians are robust outliers, meaning removing them improves the RMSE score.
+- Why: Imputing values gave a decent RMSE of 2.31; however, removing rows improved the score even further to 2.04. Medians are robust to outliers, so they are a safe fill for the few values that remain.
 
 ### 2.3 Data-entry errors
 
@@ -69,14 +69,14 @@ The following already have errors:
 | all other columns | see code | 0 | |
 
 - Handling: replaced with NaN, then the rows are dropped with the missing-value step (Section 2.2).
-- Why: The values are unknown, so dropping these rows does not affect the table as a whole. Imputing the values where able gives more training data. 
+- Why: The values are unknown, so dropping these rows does not affect the table as a whole. Imputing the values where possible would give more training data.
 
 ![histogram](code/figures/histogram.png)
 
 ### 2.4 Scaling
 
 - Method: standardization, z = (x − mean) / std, applied to every model input column.
-- Why: The feature range is quite leage, some itesm 0-9 and other up to 100, so standardizing the results allows for one learning rate to apply for all features. 
+- Why: The feature ranges differ widely (some items span 0–9 and others go up to 100), so standardizing allows one learning rate to apply to all features.
 - Statement: the mean and std were computed **from the training data only** and reused for the validation and test data (`Preprocessor.fit` / `.transform`).
 
 ### 2.5 Pipeline
@@ -124,7 +124,7 @@ Check: the fitted parameters differ from the closed-form least-squares solution 
 | 0.1 | 162 | 2.0685 |
 | 0.5 | 28 | 2.0685 |
 
-Chosen: **0.5** (fastest to converge, same final error). The trade-off is simple: the smaller the rate, the slower the training is, while the larger it is, the faster and more likely it is to diverge. 
+Chosen: **0.5** (fastest to converge, same final error). The trade-off is simple: the smaller the rate, the slower the training; the larger the rate, the faster the training but the more likely it is to diverge.
 
 ### 3.4 Model selection
 
@@ -140,7 +140,7 @@ Chosen: **0.5** (fastest to converge, same final error). The trade-off is simple
 | F: D + Commute Minutes | 7 | 4.29 | 2.07 |
 | G: all 7 + Sleep Hours Sq | 8 | 4.29 | 2.07 |
 
-Engineered feature: Sleep Hours Sq. The mean Performance Index rises from around 50 ar four hours of sleep to around 57 with seven to eight hours of sleep, then falls at nine hours. This means a straight line fits poorly to this. Adding the squared term, it was able to reduce RMSE from 2.89 to 2.07. Adding Weekly Study Hours and Commute Minutes did not affect the scores in any way (Weekly Study Hours duplicates Hours Studied, r = 0.92).
+Engineered feature: Sleep Hours Sq. The mean Performance Index rises from around 50 at four hours of sleep to around 57 with seven to eight hours of sleep, then falls at nine hours. This means a straight line fits this relationship poorly. Adding the squared term reduced the RMSE from 2.89 to 2.07. Adding Weekly Study Hours and Commute Minutes did not affect the scores in any way (Weekly Study Hours duplicates Hours Studied, r = 0.92).
 
 ### 3.5 Final model
 
@@ -180,13 +180,13 @@ Note: Sleep Hours and its squared term are treated as one feature in methods 1�
 ### 4.3 Comparison
 
 Four of five methods give the same top three. The exception is the single-feature method, which puts Weekly Study Hours third.
-Weekly Study Hours correlates to Hours Studied, producing the same values of 0.92, so it by itself would produce the same prediction. Once Hours Studied is intorduced into the model, it holds almost no value. Sleep Hours scores low as a single feature because its effect is small on its own; it matters in combination with the others.
+Weekly Study Hours is strongly correlated with Hours Studied (r = 0.92), so by itself it carries nearly the same predictive information. Once Hours Studied is introduced into the model, it adds almost no value. Sleep Hours scores low as a single feature because its effect is small on its own; it matters in combination with the others.
 
 ### 4.4 Stability
 
 **Table 7.** Top three for five random splits (seeds 1–5). Source: `code/results/importance_stability.md`.
 
-Previous Scores > Hours Studied > Sleep Hours for the permutation, drop-one, std.-coefficient, random-forest and mean-rank methods in **all five splits**. The single-feature method gave Weekly Study Hours as third in all five. From this, it is proven that the rankings are stable, as they are the same across all five splits.
+Previous Scores > Hours Studied > Sleep Hours for the permutation, drop-one, std.-coefficient, random-forest and mean-rank methods in **all five splits**. The single-feature method gave Weekly Study Hours as third in all five. From this, the rankings appear stable, as they are the same across all five splits.
 
 ### 4.5 Relationships
 
@@ -200,15 +200,15 @@ Previous Scores > Hours Studied > Sleep Hours for the permutation, drop-one, std
 
 ### 4.6 Prediction vs. causation
 
-The results show that these features help predict Performance Index, not that changing them would change a student's score. The data is observational, meaning there may be cofounders. One example could be how motivation would affect both the study hours as well as the scores. Another options could bne previous scores being a proxy for ability, as they may affect motivation or intuition. What the data can actual support could be the following: flagging students who are at risk or are struggling. The data shows directly that more sleep and study would impriove a students scores.
+The results show that these features help predict Performance Index, not that changing them would change a student's score. The data is observational, meaning there may be confounders. One example is motivation, which could affect both study hours and scores. Another is that previous scores may be a proxy for ability, which could in turn affect motivation and intuition. What the data can actually support is flagging students who are at risk or struggling.
 
 ## 5. Conclusion
 
-To conclude the study, the single most important aspect of the sata is the prior scores mixed with the study hours and sleep. These together give actual correlation meaning to the data. Others, such as extracurriculars and commute, add little to the scores, holding less meaning. The biggest limitations of the model is its use of oberservational data, removing outliers and NaN values, and using a linear model instead of non-linear.
+To conclude the study, the single most important aspect of the data is the prior scores mixed with the study hours and sleep. These together give actual correlation meaning to the data. Others, such as extracurriculars and commute, add little to the scores, holding less meaning. The biggest limitations of the model are its use of observational data, the removal of outliers and rows with NaN values, and the use of a linear model instead of a non-linear one.
 
 ## References
 
-- Liang, Tony (2026). mid-term_exam.pdf [PDF file]. BlackBoard. Texas A&M Univeristy - San Antonio
+- Liang, Tony (2026). mid-term_exam.pdf [PDF file]. BlackBoard. Texas A&M University - San Antonio
 - Harris, C. R., Millman, K. J., van der Walt, S. J., et al. (2020). Array Programming with NumPy. Nature 585, 357 (2020). https://doi.org/10.1038/s41586-020-2649-2
 Cited by: 37133
 McKinney, W. (2010). Data Structures for Statistical Computing in Python. Proceedings of the Python in Science Conference, 56-61. https://doi.org/10.25080/majora-92bf1922-00a
